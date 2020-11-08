@@ -27,7 +27,7 @@ Each event is an 8x8 image
 """
 
 from matplotlib import pyplot as plt
-fig = plt.figure(figsize=(10, 10))  # figure size in inches
+fig = plt.figure(figsize=(10, 10))  # figure size in inches 10 by 10 plots = 100
 fig.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0.05, wspace=0.05)
 
 for i in range(100):
@@ -42,12 +42,19 @@ for i in range(100):
 
 plt.figure()
 
+#print(digits.data)
+
 from sklearn.decomposition import PCA
+#pca = PCA(n_components=3)
 pca = PCA(n_components=2)
 proj = pca.fit_transform(digits.data)
 print(proj.shape)
+#fig = plt.figure()
+#ax = fig.add_subplot(111, projection='3d')
 plt.scatter(proj[:, 0], proj[:, 1], c=digits.target.astype(int), cmap=plt.get_cmap('Paired', 10), vmin=-0.5, vmax=9.5)
-plt.colorbar()
+#ax.scatter(proj[:, 0], proj[:, 1], proj[:, 2], c=digits.target.astype(int), cmap=plt.get_cmap('Paired', 10), vmin=-0.5, vmax=9.5)
+#plt.show()
+#plt.colorbar()
 
 """# **Plot principal components**"""
 
@@ -63,32 +70,21 @@ ax.bar( [x for x in range(principal.size)], principal)
 
 """Quantify the performance"""
 
-n_components=32
-
-pca = PCA(n_components)
-
-proj = pca.fit_transform(digits.data)
-
-principal = pca.explained_variance_
-print(pca.explained_variance_)
-
-fig, ax = plt.subplots(tight_layout=True)
-ax.bar( [x for x in range(principal.size)], principal)
-
 import numpy as np
 from sklearn.model_selection import train_test_split
 
 # split the data into training and validation sets
 init = np.random.randint(0,1000)
-X_train, X_test, y_train, y_test = train_test_split(pca.fit_transform(digits.data), digits.target, random_state=init)
+X_train, X_test, y_train, y_test = train_test_split(pca.fit_transform(digits.data)[:,0:20], digits.target, random_state=init) 
+# 32 eigen vectors out of 64, 
 
 """## **Classify with Naive Bayes Classifies / Fisher Linear Discriminants**"""
 
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import GaussianNB # with 32 eigenvectors
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 
-# train the model
+# train the model, choose the classifier, gaus naive bayes vs. Fisher discriminant
 clf = GaussianNB()
 #clf = LinearDiscriminantAnalysis()
 
@@ -146,41 +142,4 @@ print(metrics.classification_report(expected, predicted))
 
 print(metrics.confusion_matrix(expected, predicted))
 
-
-"""# **Plot digits after PCA**"""
-
-eigendigits = pca.components_.reshape((n_components, 8, 8))
-
-# Plot the prediction
-fig = plt.figure(figsize=(6, 6))  # figure size in inches
-fig.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0.05, wspace=0.05)
-
-# plot the digits: each image is 8x8 pixels
-for i in range(len(eigendigits)):
-    ax = fig.add_subplot(8, 8, i + 1, xticks=[], yticks=[])
-    ax.imshow(eigendigits[i], cmap=plt.cm.binary,
-              interpolation='nearest')
-
-"""# **Plot digits after PCA**"""
-
-# plot PCA reconstructed digits
-X_test_inv = pca.inverse_transform(X_test)
-
-# Plot the prediction
-fig = plt.figure(figsize=(6, 6))  # figure size in inches
-fig.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0.05, wspace=0.05)
-
-
-# plot the digits: each image is 8x8 pixels
-for i in range(64):
-    ax = fig.add_subplot(8, 8, i + 1, xticks=[], yticks=[])
-    ax.imshow(X_test_inv.reshape(-1, 8, 8)[i], cmap=plt.cm.binary,
-              interpolation='nearest')
-
-    # label the image with the target value
-    if predicted[i] == expected[i]:
-        ax.text(0, 7, str(expected[i])+" "+str(predicted[i]), color='green')
-    else:
-        ax.text(0, 7, str(expected[i])+" "+str(predicted[i]), color='red')
-    
 plt.show()
